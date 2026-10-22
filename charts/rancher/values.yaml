@@ -1,0 +1,43 @@
+# Ingress owned by this wrapper chart (templates/ingress.yaml), routed through Kong.
+ingress:
+  enabled: true
+  className: kong
+  annotations: {}
+
+# Values for the upstream rancher chart live under `rancher:`.
+# Upstream defaults: https://github.com/rancher/rancher/blob/main/chart/values.yaml
+# Install into the `cattle-system` namespace (Rancher requires it).
+rancher:
+  # Optional. Leave empty to reach Rancher through the Kong proxy load balancer
+  # address directly. Set it per cluster (e.g. with --set or a cluster values
+  # file) once a DNS name points at the Kong proxy.
+  hostname: ""
+
+  # Leave empty to let Rancher generate one; read it with:
+  #   kubectl get secret -n cattle-system bootstrap-secret -o go-template='{{.data.bootstrapPassword|base64decode}}'
+  bootstrapPassword: ""
+
+  replicas: 1
+
+  networkExposure:
+    type: ingress
+  ingress:
+    # Upstream Ingress needs a hostname; templates/ingress.yaml replaces it.
+    enabled: false
+    tls:
+      # rancher = self-signed CA issued by cert-manager (used when hostname is set)
+      # letsEncrypt = public cert (set letsEncrypt.email below)
+      # secret = bring your own cert in secret tls-rancher-ingress
+      source: rancher
+
+  letsEncrypt:
+    email: ""
+    ingress:
+      class: kong
+
+  resources:
+    requests:
+      cpu: 250m
+      memory: 1Gi
+    limits:
+      memory: 2Gi

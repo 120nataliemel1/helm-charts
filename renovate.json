@@ -1,0 +1,30 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "helmv3": {
+    "fileMatch": [
+      "(^|/)Chart\\.yaml$"
+    ]
+  },
+  "packageRules": [
+    {
+      "matchManagers": [
+        "helmv3"
+      ],
+      "bumpVersion": "patch",
+      "commitMessageTopic": "{{depName}} chart"
+    },
+    {
+      "matchManagers": [
+        "helmv3"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "groupName": "helm chart minor/patch updates"
+    }
+  ]
+}

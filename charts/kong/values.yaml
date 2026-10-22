@@ -1,0 +1,39 @@
+# Values for the upstream kong/ingress chart live under `ingress:`.
+# Upstream defaults: https://github.com/Kong/charts/blob/main/charts/ingress/values.yaml
+ingress:
+  controller:
+    # DB-less mode. Set explicitly: Helm doesn't apply the nested
+    # `postgresql.enabled: false` default when this chart wraps kong/ingress.
+    postgresql:
+      enabled: false
+    ingressController:
+      ingressClass: kong
+      # Make Kong the default IngressClass so Ingresses without a class are served by it
+      ingressClassAnnotations:
+        ingressclass.kubernetes.io/is-default-class: "true"
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        memory: 256Mi
+
+  gateway:
+    replicaCount: 2
+    postgresql:
+      enabled: false
+    proxy:
+      type: LoadBalancer
+      annotations:
+        # Expose the proxy through an internet-facing AWS NLB
+        service.beta.kubernetes.io/aws-load-balancer-type: nlb
+        service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        memory: 512Mi
+    podDisruptionBudget:
+      enabled: true
+      maxUnavailable: 1

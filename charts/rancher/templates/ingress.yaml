@@ -1,0 +1,49 @@
+{{- /*
+Rancher's own Ingress requires a hostname, so it is disabled in values.yaml and
+this one is used instead. Without `rancher.hostname` it matches any host on the
+Kong proxy (reach Rancher at https://<kong-proxy-lb>/, Kong's default cert).
+With a hostname it adds the host rule and a cert-manager TLS certificate.
+*/ -}}
+{{- if .Values.ingress.enabled }}
+{{- $r := .Values.rancher }}
+{{- $fullname := ternary .Release.Name (printf "%s-rancher" .Release.Name) (contains "rancher" .Release.Name) | trunc 63 | trimSuffix "-" }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $fullname }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ $fullname }}
+    release: {{ .Release.Name }}
+  annotations:
+    konghq.com/protocols: https
+    konghq.com/https-redirect-status-code: "301"
+    {{- if and $r.hostname (ne $r.ingress.tls.source "secret") }}
+    cert-manager.io/issuer: {{ $fullname }}
+    cert-manager.io/issuer-kind: Issuer
+    {{- end }}
+    {{- with .Values.ingress.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  rules:
+    - {{- with $r.hostname }}
+      host: {{ . | quote }}
+      {{- end }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $fullname }}
+                port:
+                  number: 80
+  {{- if $r.hostname }}
+  tls:
+    - hosts:
+        - {{ $r.hostname | quote }}
+      secretName: {{ $r.ingress.tls.secretName | default "tls-rancher-ingress" }}
+  {{- end }}
+{{- end }}

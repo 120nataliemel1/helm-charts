@@ -1,0 +1,10 @@
+apiVersion: v2
+name: rancher
+description: Rancher server, exposed through Kong. Requires cert-manager to be installed first.
+type: application
+version: 0.1.0
+appVersion: "v2.15.2"
+dependencies:
+  - name: rancher
+    version: 2.15.2
+    repository: https://releases.rancher.com/server-charts/stable

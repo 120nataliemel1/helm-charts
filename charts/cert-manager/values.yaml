@@ -1,0 +1,21 @@
+# Values for the upstream jetstack/cert-manager chart live under `cert-manager:`.
+# Upstream defaults: https://github.com/cert-manager/cert-manager/blob/master/deploy/charts/cert-manager/values.yaml
+cert-manager:
+  crds:
+    enabled: true
+    # Keep CRDs (and therefore all Certificates) if the release is uninstalled
+    keep: true
+  resources:
+    requests:
+      cpu: 10m
+      memory: 64Mi
+  webhook:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 32Mi
+  cainjector:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 64Mi

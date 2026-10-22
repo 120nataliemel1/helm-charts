@@ -1,0 +1,4 @@
+# Per-cluster overrides for charts/kong (optional).
+ingress:
+  gateway:
+    replicaCount: 2

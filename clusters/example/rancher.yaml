@@ -1,0 +1,9 @@
+# Per-cluster overrides for charts/rancher. Copy this folder to clusters/<cluster-name>/
+# and pass it to scripts/install.sh. Every file here is optional.
+rancher:
+  hostname: ""          # e.g. rancher.yourdomain.com once DNS points at the Kong LB
+  # ingress:
+  #   tls:
+  #     source: letsEncrypt
+  # letsEncrypt:
+  #   email: you@yourdomain.com

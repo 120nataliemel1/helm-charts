@@ -1,0 +1,3 @@
+# Downloaded dependency archives (rebuilt from Chart.lock by `helm dependency build` / Argo CD)
+charts/*/charts/
+*.tgz
