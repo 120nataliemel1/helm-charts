@@ -36,6 +36,8 @@ args=()
 if [[ -f "$ROOT/clusters/$CLUSTER/argocd.yaml" ]]; then
   args+=(-f "$ROOT/clusters/$CLUSTER/argocd.yaml")
 fi
+# dependency build only fetches from repos added with `helm repo add`
+helm repo add argo https://argoproj.github.io/argo-helm --force-update >/dev/null
 helm dependency build "$ROOT/charts/argocd" >/dev/null
 helm upgrade --install argocd "$ROOT/charts/argocd" \
   --namespace argocd --create-namespace \

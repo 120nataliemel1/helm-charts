@@ -16,7 +16,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: azure/setup-helm@v4
       - name: Build dependencies
-        run: helm dependency build charts/${{ matrix.chart }}
+        run: |
+          # dependency build only fetches from repos added with `helm repo add`
+          for url in $(awk '/repository:/ {print $2}' charts/${{ matrix.chart }}/Chart.yaml); do
+            helm repo add "$(echo "$url" | md5sum | cut -c1-8)" "$url"
+          done
+          helm dependency build charts/${{ matrix.chart }}
       - name: Lint
         run: helm lint charts/${{ matrix.chart }}
       - name: Render
