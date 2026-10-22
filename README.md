@@ -21,9 +21,9 @@ charts/<name>/
   values.yaml  # our overrides, nested under the dependency name
   templates/   # extra resources we add (rancher: its Kong Ingress)
 bootstrap/     # app of apps: one Argo CD Application per chart
-clusters/<cluster-name>/
-  root-app.yaml  # the one manifest applied by hand
-  <chart>.yaml   # optional per-cluster overrides for charts/<chart>
+clusters/<cluster-name>/  # optional per-cluster overrides
+  <chart>.yaml            # e.g. rancher.yaml, merged over charts/<chart>/values.yaml
+bootstrap.sh              # one command to bootstrap a cluster
 ```
 
 To add a tool: create `charts/<name>/` and add it under `apps:` in
@@ -49,30 +49,38 @@ Before merging a Rancher upgrade, check its supported Kubernetes range
 
 ## Bootstrapping a new cluster
 
-With `kubectl` pointed at the new cluster:
+Every cluster (cluster1, cluster2, ...) uses the same charts and runs its own
+Argo CD. With `kubectl` pointed at the new cluster:
 
 ```sh
-# 1. Per-cluster folder (commit and push it)
-cp -r clusters/example clusters/<cluster-name>
-#    set `cluster: <cluster-name>` in clusters/<cluster-name>/root-app.yaml
-
-# 2. Install Argo CD once by hand
-helm dependency build charts/argocd
-helm install argocd charts/argocd -n argocd --create-namespace --wait
-
-# 3. Hand the cluster to Argo CD
-kubectl apply -f clusters/<cluster-name>/root-app.yaml
+./bootstrap.sh cluster1
 ```
 
-If this repo is private, give Argo CD read access before step 3
+That's all. `clusters/cluster1/` is optional: without it the cluster gets the
+chart defaults. Add it (commit and push) only when a cluster needs different
+settings, for example:
+
+```
+clusters/
+  cluster1/            # nothing yet = defaults
+  cluster2/
+    rancher.yaml       # rancher.hostname: rancher.cluster2.example.com
+  cluster3/
+    kong.yaml          # more gateway replicas
+```
+
+`REPO_URL` and `REVISION` env vars override the Git repo and branch Argo CD
+reads from (default: this repo, `main`). If this repo is private, give Argo CD
+read access first
 ([repository credentials](https://argo-cd.readthedocs.io/en/stable/user-guide/private-repositories/)).
 
 ### How it works
 
-1. **Helm installs Argo CD.** Nothing can manage the cluster yet, so this one
-   chart is installed by hand.
-2. **`root-app.yaml` creates the `root` Application.** It points Argo CD at
-   `bootstrap/` with `cluster: <cluster-name>`.
+1. **`bootstrap.sh` installs Argo CD with Helm.** Nothing can manage the
+   cluster yet, so this one chart is installed directly.
+2. **`bootstrap.sh` creates the `root` Application.** It points Argo CD at
+   `bootstrap/` with `cluster: <cluster-name>`. (It can't be part of the Helm
+   install: the Application type only exists once Argo CD's CRDs are installed.)
 3. **`bootstrap/` creates one Application per chart** (`argocd`, `kong`,
    `cert-manager`, `rancher`). Each renders `charts/<name>` with
    `clusters/<cluster-name>/<name>.yaml` on top, if that file exists.

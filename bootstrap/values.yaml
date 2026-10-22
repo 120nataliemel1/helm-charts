@@ -1,5 +1,5 @@
 # Name of the folder in clusters/ that holds this cluster's overrides.
-# Set by clusters/<name>/root-app.yaml.
+# Set by bootstrap.sh <cluster-name>. The folder is optional.
 cluster: example
 
 # Where Argo CD reads the charts from
