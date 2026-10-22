@@ -10,12 +10,21 @@
 #
 # clusters/<cluster-name>/ is optional: without it the cluster gets the defaults.
 # Safe to re-run.
+#
+# With EKS_UPDATE_KUBECONFIG=true (set in the Dockerfile) it first fetches the
+# kubeconfig for EKS cluster $EKS_CLUSTER_NAME (default: <cluster-name>).
 set -euo pipefail
 
 CLUSTER="${1:?usage: $0 <cluster-name>}"
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 REPO_URL="${REPO_URL:-https://github.com/120nataliemel1/helm-charts.git}"
 REVISION="${REVISION:-main}"
+
+if [[ "${EKS_UPDATE_KUBECONFIG:-}" == "true" ]]; then
+  # The image's aws CLI v1 only reads AWS_DEFAULT_REGION; accept AWS_REGION too
+  export AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION:-${AWS_REGION:-}}"
+  aws eks update-kubeconfig --name "${EKS_CLUSTER_NAME:-$CLUSTER}"
+fi
 
 echo "Bootstrapping cluster '$CLUSTER' on context $(kubectl config current-context)"
 if [[ ! -d "$ROOT/clusters/$CLUSTER" ]]; then

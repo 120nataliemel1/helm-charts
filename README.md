@@ -24,6 +24,7 @@ bootstrap/     # app of apps: one Argo CD Application per chart
 clusters/<cluster-name>/  # optional per-cluster overrides
   <chart>.yaml            # e.g. rancher.yaml, merged over charts/<chart>/values.yaml
 bootstrap.sh              # one command to bootstrap a cluster
+Dockerfile                # bootstrap.sh + helm, kubectl, aws CLI in one image
 ```
 
 To add a tool: create `charts/<name>/` and add it under `apps:` in
@@ -50,13 +51,29 @@ Before merging a Rancher upgrade, check its supported Kubernetes range
 ## Bootstrapping a new cluster
 
 Every cluster (cluster1, cluster2, ...) uses the same charts and runs its own
-Argo CD. With `kubectl` pointed at the new cluster:
+Argo CD. Bootstrap it with the image (no local tools needed besides Docker):
+
+```sh
+docker run --rm -v ~/.aws:/root/.aws:ro -e AWS_REGION=us-east-1 \
+  ghcr.io/120nataliemel1/helm-charts-bootstrap cluster1
+```
+
+The `bootstrap-image` workflow builds and pushes the image on every push to
+`main`; build it locally with `docker build -t helm-charts-bootstrap .`. Inside
+the container, `bootstrap.sh` first runs `aws eks update-kubeconfig --name
+cluster1`. If the EKS cluster's name differs from the `clusters/` folder name,
+add `-e EKS_CLUSTER_NAME=<eks-name>`. Add `-e AWS_PROFILE=<profile>` to pick a
+profile from `~/.aws`.
+
+Or run the script directly with `kubectl` already pointed at the cluster:
 
 ```sh
 ./bootstrap.sh cluster1
 ```
 
-That's all. `clusters/cluster1/` is optional: without it the cluster gets the
+The image only carries the bootstrap. Argo CD reads the charts and `clusters/`
+settings from GitHub, so changing a cluster's settings takes a push, not a new
+image. `clusters/cluster1/` is optional: without it the cluster gets the
 chart defaults. Add it (commit and push) only when a cluster needs different
 settings, for example:
 
