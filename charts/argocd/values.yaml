@@ -1,0 +1,28 @@
+# Values for the upstream argo/argo-cd chart live under `argo-cd:`.
+# Upstream defaults: https://github.com/argoproj/argo-helm/blob/main/charts/argo-cd/values.yaml
+# Install into the `argocd` namespace with release name `argocd`, so the
+# `argocd` Application in bootstrap/ adopts it.
+argo-cd:
+  crds:
+    # Keep Applications if this release is ever uninstalled
+    keep: true
+
+  # Not using SSO
+  dex:
+    enabled: false
+
+  configs:
+    cm:
+      # Report a child Application's real health, so sync waves in bootstrap/
+      # wait for Kong and cert-manager to be Healthy before installing Rancher.
+      resource.customizations.health.argoproj.io_Application: |
+        hs = {}
+        hs.status = "Progressing"
+        hs.message = ""
+        if obj.status ~= nil and obj.status.health ~= nil then
+          hs.status = obj.status.health.status
+          if obj.status.health.message ~= nil then
+            hs.message = obj.status.health.message
+          end
+        end
+        return hs

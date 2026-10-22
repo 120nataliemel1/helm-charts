@@ -1,0 +1,33 @@
+{{- range $name, $app := .Values.apps }}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: {{ $app.wave | quote }}
+spec:
+  project: default
+  source:
+    repoURL: {{ $.Values.repoURL }}
+    targetRevision: {{ $.Values.targetRevision }}
+    path: charts/{{ $name }}
+    helm:
+      releaseName: {{ $name }}
+      # Per-cluster overrides; a missing file is skipped
+      valueFiles:
+        - ../../clusters/{{ $.Values.cluster }}/{{ $name }}.yaml
+      ignoreMissingValueFiles: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: {{ $app.namespace }}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      # Large CRDs (Kong, cert-manager) exceed client-side apply's annotation limit
+      - ServerSideApply=true
+{{- end }}

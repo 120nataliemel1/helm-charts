@@ -1,0 +1,23 @@
+# Name of the folder in clusters/ that holds this cluster's overrides.
+# Set by clusters/<name>/root-app.yaml.
+cluster: example
+
+# Where Argo CD reads the charts from
+repoURL: https://github.com/120nataliemel1/helm-charts.git
+targetRevision: main
+
+# One Argo CD Application per chart in charts/<name>.
+# Lower waves are installed and Healthy before higher waves start.
+apps:
+  argocd:
+    namespace: argocd
+    wave: -1
+  kong:
+    namespace: kong
+    wave: 0
+  cert-manager:
+    namespace: cert-manager
+    wave: 0
+  rancher:
+    namespace: cattle-system
+    wave: 1

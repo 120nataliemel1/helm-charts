@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        chart: [kong, cert-manager, rancher]
+        chart: [argocd, kong, cert-manager, rancher]
     steps:
       - uses: actions/checkout@v4
       - uses: azure/setup-helm@v4
@@ -21,3 +21,16 @@ jobs:
         run: helm lint charts/${{ matrix.chart }}
       - name: Render
         run: helm template ${{ matrix.chart }} charts/${{ matrix.chart }} --kube-version 1.35.0 --api-versions networking.k8s.io/v1/IngressClass > /dev/null
+
+  bootstrap:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+      - name: Lint
+        run: helm lint bootstrap
+      - name: Every app has a chart
+        run: |
+          for app in $(helm template bootstrap bootstrap | yq '.spec.source.path' | grep -v -- '---'); do
+            test -f "$app/Chart.yaml" || { echo "missing $app/Chart.yaml"; exit 1; }
+          done

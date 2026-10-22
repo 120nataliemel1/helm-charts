@@ -1,0 +1,5 @@
+apiVersion: v2
+name: bootstrap
+description: App of apps. Creates one Argo CD Application per platform chart for a cluster.
+type: application
+version: 0.1.0

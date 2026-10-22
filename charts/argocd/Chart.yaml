@@ -1,0 +1,10 @@
+apiVersion: v2
+name: argocd
+description: Argo CD. Installed once by hand to bootstrap a cluster, then manages itself and the other charts.
+type: application
+version: 0.1.0
+appVersion: "v3.5.5"
+dependencies:
+  - name: argo-cd
+    version: 10.10.5
+    repository: https://argoproj.github.io/argo-helm

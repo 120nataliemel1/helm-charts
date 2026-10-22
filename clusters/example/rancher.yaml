@@ -1,5 +1,5 @@
 # Per-cluster overrides for charts/rancher. Copy this folder to clusters/<cluster-name>/
-# and pass it to scripts/install.sh. Every file here is optional.
+# and set `cluster` in root-app.yaml. Every chart file here is optional.
 rancher:
   hostname: ""          # e.g. rancher.yourdomain.com once DNS points at the Kong LB
   # ingress:
